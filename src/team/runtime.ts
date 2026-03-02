@@ -127,7 +127,18 @@ async function readJsonSafe<T>(filePath: string): Promise<T | null> {
           return null;
         }
       }
-    } catch {
+    } catch (error: unknown) {
+      const isMissingDoneSignal =
+        isDoneSignalPath
+        && typeof error === 'object'
+        && error !== null
+        && 'code' in error
+        && error.code === 'ENOENT';
+
+      if (isMissingDoneSignal) {
+        return null;
+      }
+
       if (!isDoneSignalPath || attempt === maxAttempts) {
         return null;
       }
@@ -138,6 +149,7 @@ async function readJsonSafe<T>(filePath: string): Promise<T | null> {
 
   return null;
 }
+
 
 function parseWorkerIndex(workerNameValue: string): number {
   const match = workerNameValue.match(/^worker-(\d+)$/);
