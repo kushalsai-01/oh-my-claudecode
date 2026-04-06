@@ -862,6 +862,11 @@ export async function sendToWorker(
     await sendKey('C-m');
     await sleep(140);
     const finalCheckCapture = await capturePaneAsync(paneId, execFileAsync as never);
+    // Empty capture means tmux capture failed or returned indeterminate output.
+    // Treat this as delivery failure to keep dispatch behavior fail-closed.
+    if (!finalCheckCapture || finalCheckCapture.trim() === '') {
+      return false;
+    }
     return !paneTailContainsLiteralLine(finalCheckCapture, message);
   } catch {
     return false;
